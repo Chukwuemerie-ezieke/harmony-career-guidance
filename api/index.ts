@@ -86,6 +86,26 @@ async function createHandler() {
       return res.json(rows[0]);
     }
 
+    // DELETE /api/submissions (bulk delete — expects { ids: number[] })
+    if (method === "DELETE" && (url === "/api/submissions" || url === "/api" || url === "/api/")) {
+      const { ids } = req.body || {};
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({ error: "Provide { ids: [1,2,3] }" });
+      }
+      const { inArray } = await import("drizzle-orm");
+      await db.delete(submissions).where(inArray(submissions.id, ids));
+      return res.json({ success: true, deleted: ids });
+    }
+
+    // DELETE /api/submissions/:id
+    if (method === "DELETE" && idMatch) {
+      const id = parseInt(idMatch[1]);
+      const existing = await db.select().from(submissions).where(eq(submissions.id, id));
+      if (!existing[0]) return res.status(404).json({ error: "Not found" });
+      await db.delete(submissions).where(eq(submissions.id, id));
+      return res.json({ success: true, deleted: id });
+    }
+
     // Health check
     if (url.startsWith("/api/health")) {
       return res.json({ status: "ok" });

@@ -1,18 +1,22 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { SchoolHeader } from "@/components/SchoolHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Submission } from "@shared/schema";
 import {
   Users, Search, ArrowLeft, BarChart3, TrendingUp,
-  Filter, Eye, Compass
+  Filter, Eye, Compass, Trash2
 } from "lucide-react";
 
 interface RecResult {
@@ -23,9 +27,37 @@ interface RecResult {
 export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { toast } = useToast();
 
   const { data: submissions = [], isLoading } = useQuery<Submission[]>({
     queryKey: ["/api/submissions"],
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      // Delete one-by-one to work with the single-delete endpoint
+      for (const id of ids) {
+        await apiRequest("DELETE", `/api/submissions/${id}`);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/submissions"] });
+      setSelectedIds(new Set());
+      setShowDeleteDialog(false);
+      toast({
+        title: "Records deleted",
+        description: `${selectedIds.size} record(s) removed successfully.`,
+      });
+    },
+    onError: (err: any) => {
+      toast({
+        title: "Delete failed",
+        description: err.message || "Something went wrong",
+        variant: "destructive",
+      });
+    },
   });
 
   // Parse recommendations for each submission
@@ -81,6 +113,26 @@ export default function Dashboard() {
 
     return result;
   }, [parsedSubmissions, search, courseFilter]);
+
+  // Selection helpers
+  const toggleSelect = (id: number) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(s => s.id)));
+    }
+  };
+
+  const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -166,7 +218,7 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Filters */}
+            {/* Filters + Delete action bar */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -192,6 +244,18 @@ export default function Dashboard() {
                   </SelectContent>
                 </Select>
               </div>
+              {selectedIds.size > 0 && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setShowDeleteDialog(true)}
+                  data-testid="button-delete-selected"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete ({selectedIds.size})
+                </Button>
+              )}
             </div>
 
             {/* Table */}
@@ -209,6 +273,14 @@ export default function Dashboard() {
                     <Table>
                       <TableHeader>
                         <TableRow>
+                          <TableHead className="w-10">
+                            <Checkbox
+                              checked={allSelected}
+                              onCheckedChange={toggleAll}
+                              aria-label="Select all"
+                              data-testid="checkbox-select-all"
+                            />
+                          </TableHead>
                           <TableHead className="text-xs">Name</TableHead>
                           <TableHead className="text-xs">Class</TableHead>
                           <TableHead className="text-xs">Subjects</TableHead>
@@ -219,7 +291,19 @@ export default function Dashboard() {
                       </TableHeader>
                       <TableBody>
                         {filtered.map(s => (
-                          <TableRow key={s.id} data-testid={`row-student-${s.id}`}>
+                          <TableRow
+                            key={s.id}
+                            data-testid={`row-student-${s.id}`}
+                            className={selectedIds.has(s.id) ? "bg-primary/5" : ""}
+                          >
+                            <TableCell>
+                              <Checkbox
+                                checked={selectedIds.has(s.id)}
+                                onCheckedChange={() => toggleSelect(s.id)}
+                                aria-label={`Select ${s.firstName}`}
+                                data-testid={`checkbox-student-${s.id}`}
+                              />
+                            </TableCell>
                             <TableCell className="font-medium text-sm">{s.firstName}</TableCell>
                             <TableCell className="text-sm">{s.studentClass}</TableCell>
                             <TableCell>
@@ -267,6 +351,31 @@ export default function Dashboard() {
       <footer className="text-center py-4 text-xs text-muted-foreground border-t border-border/50 space-y-1">
         <p>Powered by Harmony Digital Consults</p>
       </footer>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete {selectedIds.size} record{selectedIds.size > 1 ? "s" : ""}?</DialogTitle>
+            <DialogDescription>
+              This will permanently remove the selected student submission{selectedIds.size > 1 ? "s" : ""} and their career recommendations from the database. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} data-testid="button-cancel-delete">
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => deleteMutation.mutate(Array.from(selectedIds))}
+              disabled={deleteMutation.isPending}
+              data-testid="button-confirm-delete"
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

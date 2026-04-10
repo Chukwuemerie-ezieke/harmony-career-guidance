@@ -52,5 +52,19 @@ export async function registerRoutes(
     }
   });
 
+  // Delete a single submission
+  app.delete("/api/submissions/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteSubmission(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Submission not found" });
+      }
+      res.json({ success: true, deleted: id });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   return httpServer;
 }
