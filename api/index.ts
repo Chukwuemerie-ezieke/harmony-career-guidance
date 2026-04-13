@@ -24,6 +24,8 @@ async function createHandler() {
 
   const submissions = pgTable("submissions", {
     id: serial("id").primaryKey(),
+    schoolName: text("school_name").notNull(),
+    schoolCode: text("school_code").notNull(),
     firstName: text("first_name").notNull(),
     studentClass: text("student_class").notNull(),
     strongestSubjects: text("strongest_subjects").notNull(),
@@ -48,6 +50,8 @@ async function createHandler() {
     await sql(`
       CREATE TABLE IF NOT EXISTS submissions (
         id SERIAL PRIMARY KEY,
+        school_name TEXT NOT NULL DEFAULT '',
+        school_code TEXT NOT NULL DEFAULT '',
         first_name TEXT NOT NULL,
         student_class TEXT NOT NULL,
         strongest_subjects TEXT NOT NULL,
@@ -59,6 +63,9 @@ async function createHandler() {
         created_at TEXT NOT NULL
       )
     `);
+    // Add columns to existing tables if they don't exist yet
+    await sql(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS school_name TEXT NOT NULL DEFAULT ''`);
+    await sql(`ALTER TABLE submissions ADD COLUMN IF NOT EXISTS school_code TEXT NOT NULL DEFAULT ''`);
     tablesReady = true;
   }
 
@@ -87,6 +94,8 @@ async function createHandler() {
     if (method === "POST" && !url.startsWith("/api/auth")) {
       const data = req.body;
       const rows = await db.insert(submissions).values({
+        schoolName: data.schoolName || "",
+        schoolCode: data.schoolCode || "",
         firstName: data.firstName,
         studentClass: data.studentClass,
         strongestSubjects: data.strongestSubjects,
@@ -112,9 +121,16 @@ async function createHandler() {
     }
 
     // GET /api/submissions (list all) — requires auth
-    if (method === "GET" && (url === "/api/submissions" || url === "/api" || url === "/api/")) {
+    if (method === "GET" && (url.startsWith("/api/submissions") && !idMatch || url === "/api" || url === "/api/")) {
       if (!checkAuth(req)) return res.status(401).json({ error: "Unauthorized" });
-      const all = await db.select().from(submissions).orderBy(desc(submissions.createdAt));
+      const urlObj = new URL(url, "http://localhost");
+      const schoolCodeParam = urlObj.searchParams.get("schoolCode");
+      let query = db.select().from(submissions).orderBy(desc(submissions.createdAt));
+      if (schoolCodeParam && schoolCodeParam.trim()) {
+        const all = await db.select().from(submissions).where(eq(submissions.schoolCode, schoolCodeParam)).orderBy(desc(submissions.createdAt));
+        return res.json(all);
+      }
+      const all = await query;
       return res.json(all);
     }
 

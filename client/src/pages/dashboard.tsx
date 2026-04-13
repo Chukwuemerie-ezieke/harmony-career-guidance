@@ -16,8 +16,12 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Submission } from "@shared/schema";
 import {
   Users, Search, ArrowLeft, BarChart3, TrendingUp,
-  Filter, Eye, Compass, Trash2, Lock, LogOut
+  Filter, Eye, Compass, Trash2, Lock, LogOut, Download, X
 } from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, LineChart, Line, CartesianGrid, Legend
+} from "recharts";
 
 interface RecResult {
   name: string;
@@ -100,7 +104,7 @@ function LoginGate({ onAuth }: { onAuth: (token: string) => void }) {
 
             <div className="text-center">
               <Link href="/">
-                <Button variant="link" size="sm" className="text-xs gap-1 text-muted-foreground">
+                <Button variant="ghost" size="sm" className="text-xs gap-1 text-muted-foreground">
                   <ArrowLeft className="w-3 h-3" /> Back to Home
                 </Button>
               </Link>
@@ -116,13 +120,18 @@ function LoginGate({ onAuth }: { onAuth: (token: string) => void }) {
   );
 }
 
+const PIE_COLORS = ["#01696F", "#0ea5e9", "#f59e0b", "#ef4444", "#8b5cf6", "#10b981", "#f97316", "#6366f1"];
+
 // ─── Main Dashboard ─────────────────────────────────────────────
 export default function Dashboard() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
+  const [schoolCodeFilter, setSchoolCodeFilter] = useState("");
+  const [schoolCodeInput, setSchoolCodeInput] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showCharts, setShowCharts] = useState(false);
   const { toast } = useToast();
 
   // Custom fetch that includes the auth token
@@ -136,10 +145,14 @@ export default function Dashboard() {
     return fetch(url, { ...options, headers });
   }, [authToken]);
 
+  const submissionsUrl = schoolCodeFilter
+    ? `/api/submissions?schoolCode=${encodeURIComponent(schoolCodeFilter)}`
+    : "/api/submissions";
+
   const { data: submissions = [], isLoading } = useQuery<Submission[]>({
-    queryKey: ["/api/submissions", authToken],
+    queryKey: ["/api/submissions", authToken, schoolCodeFilter],
     queryFn: async () => {
-      const res = await authFetch("/api/submissions");
+      const res = await authFetch(submissionsUrl);
       if (res.status === 401) {
         setAuthToken(null);
         throw new Error("Session expired");
@@ -161,7 +174,7 @@ export default function Dashboard() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/submissions", authToken] });
+      queryClient.invalidateQueries({ queryKey: ["/api/submissions", authToken, schoolCodeFilter] });
       setSelectedIds(new Set());
       setShowDeleteDialog(false);
       toast({
@@ -232,6 +245,62 @@ export default function Dashboard() {
     return result;
   }, [parsedSubmissions, search, courseFilter]);
 
+  // School name from first submission
+  const displayedSchoolName = useMemo(() => {
+    if (schoolCodeFilter && parsedSubmissions.length > 0) {
+      return (parsedSubmissions[0] as any).schoolName || "";
+    }
+    return "";
+  }, [schoolCodeFilter, parsedSubmissions]);
+
+  // Analytics data
+  const subjectStats = useMemo(() => {
+    const counts: Record<string, number> = {};
+    parsedSubmissions.forEach(s => s.subjects.forEach(sub => {
+      counts[sub] = (counts[sub] || 0) + 1;
+    }));
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }));
+  }, [parsedSubmissions]);
+
+  const courseDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    parsedSubmissions.forEach(s => s.parsedRecs.forEach(r => {
+      counts[r.name] = (counts[r.name] || 0) + 1;
+    }));
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([name, value]) => ({ name, value }));
+  }, [parsedSubmissions]);
+
+  const timelineData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    parsedSubmissions.forEach(s => {
+      const date = new Date(s.createdAt).toLocaleDateString();
+      counts[date] = (counts[date] || 0) + 1;
+    });
+    return Object.entries(counts).map(([date, count]) => ({ date, count }));
+  }, [parsedSubmissions]);
+
+  // CSV Export
+  const exportCSV = () => {
+    const headers = ["Name", "Class", "School Name", "School Code", "Subjects", "Recommended Courses", "Date"];
+    const rows = filtered.map(s => [
+      s.firstName,
+      s.studentClass,
+      (s as any).schoolName || "",
+      (s as any).schoolCode || "",
+      s.subjects.join("; "),
+      s.parsedRecs.map(r => r.name).join("; "),
+      new Date(s.createdAt).toLocaleDateString()
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `career-guidance-records-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   // Selection helpers
   const toggleSelect = (id: number) => {
     setSelectedIds(prev => {
@@ -251,6 +320,15 @@ export default function Dashboard() {
   };
 
   const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
+
+  const applySchoolCodeFilter = () => {
+    setSchoolCodeFilter(schoolCodeInput.trim());
+  };
+
+  const clearSchoolCodeFilter = () => {
+    setSchoolCodeFilter("");
+    setSchoolCodeInput("");
+  };
 
   // Show login gate if not authenticated
   if (!authToken) {
@@ -273,6 +351,9 @@ export default function Dashboard() {
           <div>
             <h2 className="text-xl font-bold text-foreground" data-testid="text-dashboard-title">
               Student Career Guidance Summary
+              {displayedSchoolName && (
+                <span className="ml-2 text-base font-normal text-muted-foreground">— {displayedSchoolName}</span>
+              )}
             </h2>
             <p className="text-sm text-muted-foreground">View all student submissions and recommendations</p>
           </div>
@@ -291,6 +372,28 @@ export default function Dashboard() {
                 <ArrowLeft className="w-4 h-4" /> Back to Home
               </Button>
             </Link>
+          </div>
+        </div>
+
+        {/* School Code Filter Bar */}
+        <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+          <div className="flex gap-2 items-center flex-1">
+            <Input
+              placeholder="Filter by school code..."
+              value={schoolCodeInput}
+              onChange={e => setSchoolCodeInput(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && applySchoolCodeFilter()}
+              className="max-w-xs"
+              data-testid="input-school-code-filter"
+            />
+            <Button size="sm" variant="outline" onClick={applySchoolCodeFilter}>
+              Apply
+            </Button>
+            {schoolCodeFilter && (
+              <Button size="sm" variant="ghost" className="gap-1 text-muted-foreground" onClick={clearSchoolCodeFilter}>
+                <X className="w-3.5 h-3.5" /> All Schools
+              </Button>
+            )}
           </div>
         </div>
 
@@ -351,6 +454,86 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Analytics toggle */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setShowCharts(v => !v)}
+                data-testid="button-toggle-charts"
+              >
+                <BarChart3 className="w-4 h-4" />
+                {showCharts ? "Hide Analytics" : "Show Analytics"}
+              </Button>
+              <Button variant="outline" size="sm" className="gap-2" onClick={exportCSV} data-testid="button-export-csv">
+                <Download className="w-4 h-4" /> Export CSV
+              </Button>
+            </div>
+
+            {/* Analytics Charts */}
+            {showCharts && submissions.length >= 3 && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Subject Popularity */}
+                <Card>
+                  <CardContent className="p-4">
+                    <h3 className="text-sm font-semibold mb-3">Subject Popularity</h3>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <BarChart data={subjectStats} layout="vertical" margin={{ left: 16, right: 16, top: 4, bottom: 4 }}>
+                        <XAxis type="number" tick={{ fontSize: 11 }} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} />
+                        <Tooltip />
+                        <Bar dataKey="count" fill="#01696F" radius={[0, 4, 4, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Course Distribution Pie */}
+                <Card>
+                  <CardContent className="p-4">
+                    <h3 className="text-sm font-semibold mb-3">Course Distribution</h3>
+                    <ResponsiveContainer width="100%" height={220}>
+                      <PieChart>
+                        <Pie
+                          data={courseDistribution}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={80}
+                          label={({ name, percent }) => `${name.length > 14 ? name.slice(0, 14) + "…" : name} ${(percent * 100).toFixed(0)}%`}
+                          labelLine={false}
+                        >
+                          {courseDistribution.map((_, i) => (
+                            <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+
+                {/* Submission Timeline */}
+                <Card className="lg:col-span-2">
+                  <CardContent className="p-4">
+                    <h3 className="text-sm font-semibold mb-3">Submission Timeline</h3>
+                    <ResponsiveContainer width="100%" height={180}>
+                      <LineChart data={timelineData} margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip />
+                        <Legend />
+                        <Line type="monotone" dataKey="count" stroke="#01696F" strokeWidth={2} dot={{ r: 3 }} name="Submissions" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Filters + Delete action bar */}
             <div className="flex flex-col sm:flex-row gap-3">
@@ -416,6 +599,7 @@ export default function Dashboard() {
                             />
                           </TableHead>
                           <TableHead className="text-xs">Name</TableHead>
+                          <TableHead className="text-xs">School</TableHead>
                           <TableHead className="text-xs">Class</TableHead>
                           <TableHead className="text-xs">Subjects</TableHead>
                           <TableHead className="text-xs">Recommended Courses</TableHead>
@@ -439,6 +623,7 @@ export default function Dashboard() {
                               />
                             </TableCell>
                             <TableCell className="font-medium text-sm">{s.firstName}</TableCell>
+                            <TableCell className="text-sm">{(s as any).schoolName || "-"}</TableCell>
                             <TableCell className="text-sm">{s.studentClass}</TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">

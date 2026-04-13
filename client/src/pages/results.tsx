@@ -26,6 +26,9 @@ interface RecommendationResult {
   careers: string[];
   yearsOfStudy: string;
   whyText: string;
+  scholarships?: string[];
+  postUtmeTips?: string;
+  professionalBodies?: string[];
 }
 
 export default function Results() {
@@ -137,7 +140,7 @@ export default function Results() {
       <div className="hidden print:block text-center py-6 border-b">
         <h1 className="text-xl font-bold">Career Guidance Report</h1>
         <h2 className="text-lg">Harmony Digital Consults Ltd</h2>
-        <p className="text-sm mt-1">Student: {submission.firstName} | Class: {submission.studentClass} | Date: {new Date(submission.createdAt).toLocaleDateString()}</p>
+        <p className="text-sm mt-1">Student: {submission.firstName} | Class: {submission.studentClass} | School: {(submission as any).schoolName || "N/A"} | Date: {new Date(submission.createdAt).toLocaleDateString()}</p>
       </div>
 
       <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent py-3 px-4 text-center print:hidden">
@@ -157,6 +160,7 @@ export default function Results() {
             <p className="text-sm text-muted-foreground mt-0.5">
               {submission.studentClass} &bull; {subjects.join(", ")}
             </p>
+            <p className="text-sm text-muted-foreground">School: {(submission as any).schoolName || "N/A"}</p>
             <div className="flex flex-wrap gap-1.5 mt-2">
               {interestLabels.map(label => (
                 <Badge key={label} variant="secondary" className="text-xs">{label}</Badge>
@@ -273,6 +277,44 @@ export default function Results() {
                   ))}
                 </div>
               </div>
+
+              {/* Scholarships */}
+              {rec.scholarships && rec.scholarships.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
+                    <Award className="w-4 h-4 text-primary" /> Available Scholarships
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {rec.scholarships.map(s => (
+                      <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Post-UTME Tips */}
+              {rec.postUtmeTips && (
+                <div>
+                  <h4 className="text-sm font-semibold flex items-center gap-2 mb-1.5">
+                    <BookOpen className="w-4 h-4 text-primary" /> Post-UTME Tips
+                  </h4>
+                  <p className="text-sm text-muted-foreground">{rec.postUtmeTips}</p>
+                </div>
+              )}
+
+              {/* Professional Bodies */}
+              {rec.professionalBodies && rec.professionalBodies.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
+                    <Building2 className="w-4 h-4 text-primary" /> Professional Bodies
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {rec.professionalBodies.map(b => (
+                      <Badge key={b} variant="outline" className="text-xs">{b}</Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Years of study */}
               <div className="flex items-center gap-2 text-sm text-muted-foreground">

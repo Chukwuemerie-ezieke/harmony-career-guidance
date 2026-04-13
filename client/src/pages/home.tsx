@@ -32,6 +32,8 @@ const STEP_LABELS = ["About You", "Interests", "Preferences"];
 
 export default function Home() {
   const [step, setStep] = useState(1);
+  const [schoolName, setSchoolName] = useState("");
+  const [schoolCode, setSchoolCode] = useState("");
   const [firstName, setFirstName] = useState("");
   const [studentClass, setStudentClass] = useState("");
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
@@ -60,7 +62,7 @@ export default function Home() {
     );
   };
 
-  const canProceedStep1 = firstName.trim() && studentClass && selectedSubjects.length === 3;
+  const canProceedStep1 = schoolName.trim() && schoolCode.trim() && firstName.trim() && studentClass && selectedSubjects.length === 3;
   const canProceedStep2 = selectedInterests.length >= 1;
   const canSubmit = universityType && preferredState && gradeRange;
 
@@ -77,6 +79,8 @@ export default function Home() {
       }));
 
       const payload = {
+        schoolName,
+        schoolCode,
         firstName,
         studentClass,
         strongestSubjects: JSON.stringify(selectedSubjects),
@@ -126,6 +130,31 @@ export default function Home() {
                 </div>
 
                 <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="schoolName" className="text-sm font-medium">School Name</Label>
+                    <Input
+                      id="schoolName"
+                      placeholder="Enter your school name"
+                      value={schoolName}
+                      onChange={e => setSchoolName(e.target.value)}
+                      className="mt-1.5"
+                      data-testid="input-school-name"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="schoolCode" className="text-sm font-medium">School Code</Label>
+                    <Input
+                      id="schoolCode"
+                      placeholder="Enter your school code"
+                      value={schoolCode}
+                      onChange={e => setSchoolCode(e.target.value)}
+                      className="mt-1.5"
+                      data-testid="input-school-code"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Provided by your school counsellor</p>
+                  </div>
+
                   <div>
                     <Label htmlFor="firstName" className="text-sm font-medium">First Name</Label>
                     <Input

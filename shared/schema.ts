@@ -10,6 +10,8 @@ export const users = pgTable("users", {
 
 export const submissions = pgTable("submissions", {
   id: serial("id").primaryKey(),
+  schoolName: text("school_name").notNull(),
+  schoolCode: text("school_code").notNull(),
   firstName: text("first_name").notNull(),
   studentClass: text("student_class").notNull(),
   strongestSubjects: text("strongest_subjects").notNull(), // JSON array
@@ -37,6 +39,8 @@ export type Submission = typeof submissions.$inferSelect;
 
 // Student form input type
 export const studentFormSchema = z.object({
+  schoolName: z.string().min(1, "School name is required"),
+  schoolCode: z.string().min(1, "School code is required"),
   firstName: z.string().min(1, "First name is required"),
   studentClass: z.string().min(1, "Class is required"),
   strongestSubjects: z.array(z.string()).min(3, "Select exactly 3 subjects").max(3, "Select exactly 3 subjects"),

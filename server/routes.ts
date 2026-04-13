@@ -12,6 +12,8 @@ export async function registerRoutes(
     try {
       const data = req.body;
       const submission = await storage.createSubmission({
+        schoolName: data.schoolName || "",
+        schoolCode: data.schoolCode || "",
         firstName: data.firstName,
         studentClass: data.studentClass,
         strongestSubjects: data.strongestSubjects,
