@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { SchoolHeader } from "@/components/SchoolHeader";
@@ -16,7 +16,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Submission } from "@shared/schema";
 import {
   Users, Search, ArrowLeft, BarChart3, TrendingUp,
-  Filter, Eye, Compass, Trash2
+  Filter, Eye, Compass, Trash2, Lock, LogOut
 } from "lucide-react";
 
 interface RecResult {
@@ -24,26 +24,144 @@ interface RecResult {
   category: string;
 }
 
+// ─── Login Screen ───────────────────────────────────────────────
+function LoginGate({ onAuth }: { onAuth: (token: string) => void }) {
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await apiRequest("POST", "/api/auth", { password });
+      const data = await res.json();
+      if (data.token) {
+        onAuth(data.token);
+      } else {
+        setError("Invalid response from server");
+      }
+    } catch (err: any) {
+      setError("Incorrect password. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col">
+      <SchoolHeader />
+      <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent py-3 px-4 text-center">
+        <p className="text-sm font-semibold text-primary flex items-center justify-center gap-2">
+          <Compass className="w-4 h-4" />
+          Counsellor Dashboard
+        </p>
+      </div>
+
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-sm">
+          <CardContent className="pt-8 pb-8 px-6 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                <Lock className="w-6 h-6 text-primary" />
+              </div>
+              <h2 className="text-lg font-bold text-foreground" data-testid="text-login-title">
+                Dashboard Access
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Enter the counsellor password to view student records.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <Input
+                  type="password"
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setError(""); }}
+                  autoFocus
+                  data-testid="input-dashboard-password"
+                />
+                {error && (
+                  <p className="text-xs text-destructive mt-2" data-testid="text-login-error">{error}</p>
+                )}
+              </div>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading || !password.trim()}
+                data-testid="button-login"
+              >
+                {loading ? "Verifying..." : "Access Dashboard"}
+              </Button>
+            </form>
+
+            <div className="text-center">
+              <Link href="/">
+                <Button variant="link" size="sm" className="text-xs gap-1 text-muted-foreground">
+                  <ArrowLeft className="w-3 h-3" /> Back to Home
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
+
+      <footer className="text-center py-4 text-xs text-muted-foreground border-t border-border/50 space-y-1">
+        <p>Powered by Harmony Digital Consults</p>
+      </footer>
+    </div>
+  );
+}
+
+// ─── Main Dashboard ─────────────────────────────────────────────
 export default function Dashboard() {
+  const [authToken, setAuthToken] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const { toast } = useToast();
 
+  // Custom fetch that includes the auth token
+  const authFetch = useCallback(async (url: string, options?: RequestInit) => {
+    const headers: Record<string, string> = {
+      ...(options?.headers as Record<string, string> || {}),
+    };
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+    }
+    return fetch(url, { ...options, headers });
+  }, [authToken]);
+
   const { data: submissions = [], isLoading } = useQuery<Submission[]>({
-    queryKey: ["/api/submissions"],
+    queryKey: ["/api/submissions", authToken],
+    queryFn: async () => {
+      const res = await authFetch("/api/submissions");
+      if (res.status === 401) {
+        setAuthToken(null);
+        throw new Error("Session expired");
+      }
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+    enabled: !!authToken,
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (ids: number[]) => {
-      // Delete one-by-one to work with the single-delete endpoint
       for (const id of ids) {
-        await apiRequest("DELETE", `/api/submissions/${id}`);
+        const res = await authFetch(`/api/submissions/${id}`, { method: "DELETE" });
+        if (res.status === 401) {
+          setAuthToken(null);
+          throw new Error("Session expired");
+        }
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/submissions"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/submissions", authToken] });
       setSelectedIds(new Set());
       setShowDeleteDialog(false);
       toast({
@@ -134,6 +252,11 @@ export default function Dashboard() {
 
   const allSelected = filtered.length > 0 && selectedIds.size === filtered.length;
 
+  // Show login gate if not authenticated
+  if (!authToken) {
+    return <LoginGate onAuth={setAuthToken} />;
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SchoolHeader />
@@ -153,11 +276,22 @@ export default function Dashboard() {
             </h2>
             <p className="text-sm text-muted-foreground">View all student submissions and recommendations</p>
           </div>
-          <Link href="/">
-            <Button variant="outline" size="sm" className="gap-2" data-testid="link-back-home">
-              <ArrowLeft className="w-4 h-4" /> Back to Home
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-muted-foreground"
+              onClick={() => setAuthToken(null)}
+              data-testid="button-logout"
+            >
+              <LogOut className="w-4 h-4" /> Sign Out
             </Button>
-          </Link>
+            <Link href="/">
+              <Button variant="outline" size="sm" className="gap-2" data-testid="link-back-home">
+                <ArrowLeft className="w-4 h-4" /> Back to Home
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {isLoading ? (

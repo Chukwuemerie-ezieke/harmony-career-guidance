@@ -1,6 +1,20 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import crypto from "crypto";
 
 let handler: ((req: VercelRequest, res: VercelResponse) => Promise<void>) | null = null;
+
+// Simple token generation from password
+function makeToken(password: string): string {
+  return crypto.createHash("sha256").update(password).digest("hex").slice(0, 32);
+}
+
+function checkAuth(req: VercelRequest): boolean {
+  const dashPwd = process.env.DASHBOARD_PASSWORD;
+  if (!dashPwd) return true; // No password set = open access (backward compat)
+  const auth = req.headers["authorization"] || "";
+  const token = auth.replace("Bearer ", "");
+  return token === makeToken(dashPwd);
+}
 
 async function createHandler() {
   const { neon } = await import("@neondatabase/serverless");
@@ -54,23 +68,23 @@ async function createHandler() {
     const url = req.url || "";
     const method = req.method || "GET";
 
-    // GET /api/submissions
-    if (method === "GET" && (url === "/api/submissions" || url === "/api" || url === "/api/")) {
-      const all = await db.select().from(submissions).orderBy(desc(submissions.createdAt));
-      return res.json(all);
+    // POST /api/auth — verify dashboard password, return token
+    if (method === "POST" && url.startsWith("/api/auth")) {
+      const body = req.body || {};
+      const password = typeof body === "string" ? JSON.parse(body).password : body.password;
+      const dashPwd = process.env.DASHBOARD_PASSWORD;
+      if (!dashPwd) {
+        // No password configured — grant access
+        return res.json({ success: true, token: "open" });
+      }
+      if (!password || password.trim() !== dashPwd.trim()) {
+        return res.status(401).json({ error: "Incorrect password" });
+      }
+      return res.json({ success: true, token: makeToken(dashPwd) });
     }
 
-    // GET /api/submissions/:id
-    const idMatch = url.match(/\/api\/submissions\/(\d+)/);
-    if (method === "GET" && idMatch) {
-      const id = parseInt(idMatch[1]);
-      const rows = await db.select().from(submissions).where(eq(submissions.id, id));
-      if (!rows[0]) return res.status(404).json({ error: "Not found" });
-      return res.json(rows[0]);
-    }
-
-    // POST /api/submissions
-    if (method === "POST") {
+    // POST /api/submissions — public (students submit without auth)
+    if (method === "POST" && !url.startsWith("/api/auth")) {
       const data = req.body;
       const rows = await db.insert(submissions).values({
         firstName: data.firstName,
@@ -86,8 +100,27 @@ async function createHandler() {
       return res.json(rows[0]);
     }
 
-    // DELETE /api/submissions (bulk delete — expects { ids: number[] })
+    // ---- Everything below requires auth (dashboard operations) ----
+
+    // GET /api/submissions/:id — public (for student results page)
+    const idMatch = url.match(/\/api\/submissions\/(\d+)/);
+    if (method === "GET" && idMatch) {
+      const id = parseInt(idMatch[1]);
+      const rows = await db.select().from(submissions).where(eq(submissions.id, id));
+      if (!rows[0]) return res.status(404).json({ error: "Not found" });
+      return res.json(rows[0]);
+    }
+
+    // GET /api/submissions (list all) — requires auth
+    if (method === "GET" && (url === "/api/submissions" || url === "/api" || url === "/api/")) {
+      if (!checkAuth(req)) return res.status(401).json({ error: "Unauthorized" });
+      const all = await db.select().from(submissions).orderBy(desc(submissions.createdAt));
+      return res.json(all);
+    }
+
+    // DELETE /api/submissions (bulk) — requires auth
     if (method === "DELETE" && (url === "/api/submissions" || url === "/api" || url === "/api/")) {
+      if (!checkAuth(req)) return res.status(401).json({ error: "Unauthorized" });
       const { ids } = req.body || {};
       if (!ids || !Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({ error: "Provide { ids: [1,2,3] }" });
@@ -97,8 +130,9 @@ async function createHandler() {
       return res.json({ success: true, deleted: ids });
     }
 
-    // DELETE /api/submissions/:id
+    // DELETE /api/submissions/:id — requires auth
     if (method === "DELETE" && idMatch) {
+      if (!checkAuth(req)) return res.status(401).json({ error: "Unauthorized" });
       const id = parseInt(idMatch[1]);
       const existing = await db.select().from(submissions).where(eq(submissions.id, id));
       if (!existing[0]) return res.status(404).json({ error: "Not found" });
