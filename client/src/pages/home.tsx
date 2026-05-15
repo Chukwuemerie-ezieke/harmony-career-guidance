@@ -62,7 +62,7 @@ export default function Home() {
     );
   };
 
-  const canProceedStep1 = schoolName.trim() && schoolCode.trim() && firstName.trim() && studentClass && selectedSubjects.length === 3;
+  const canProceedStep1 = firstName.trim() && studentClass && selectedSubjects.length === 3;
   const canProceedStep2 = selectedInterests.length >= 1;
   const canSubmit = universityType && preferredState && gradeRange;
 
@@ -131,7 +131,7 @@ export default function Home() {
 
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="schoolName" className="text-sm font-medium">School Name</Label>
+                    <Label htmlFor="schoolName" className="text-sm font-medium">School Name <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <Input
                       id="schoolName"
                       placeholder="Enter your school name"
@@ -143,7 +143,7 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <Label htmlFor="schoolCode" className="text-sm font-medium">School Code</Label>
+                    <Label htmlFor="schoolCode" className="text-sm font-medium">School Code <span className="text-muted-foreground font-normal">(optional)</span></Label>
                     <Input
                       id="schoolCode"
                       placeholder="Enter your school code"
@@ -152,7 +152,7 @@ export default function Home() {
                       className="mt-1.5"
                       data-testid="input-school-code"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">Provided by your school counsellor</p>
+                    <p className="text-xs text-muted-foreground mt-1">Only needed if your school is using this platform. If not, leave blank and continue.</p>
                   </div>
 
                   <div>
