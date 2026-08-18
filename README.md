@@ -1,24 +1,13 @@
-# Career Guidance Platform
+# PathVerge
 
-A career guidance tool by **Harmony Digital Consults Ltd** for Nigerian secondary school students. Helps students discover university courses, JAMB subject combinations, and career paths based on their academic strengths and interests.
+PathVerge is the career guidance product by **Harmony Digital Consults Ltd**, built for Nigerian secondary school students. It helps students discover university courses, JAMB subject combinations, and career paths based on their academic strengths and interests.
 
 ## Features
 
 - Personalised course recommendations based on strongest subjects and interests
-- JAMB/UTME subject combinations and O'Level requirements
-- Cut-off marks for federal, state, and private universities
-- Top Nigerian university suggestions per course
-- Career paths after graduation
-- Print-ready PDF reports
-- WhatsApp sharing
-- Counsellor Dashboard for school staff
-
-## Tech Stack
-
-- React 18 + TypeScript + Tailwind CSS + shadcn/ui
-- Neon PostgreSQL (serverless)
-- Vercel (serverless deployment)
-- Drizzle ORM
+- JAMB subject combinations for recommended courses
+- Career path exploration tailored to Nigerian students
+- Student submissions for counsellor review
 
 ## Developed by
 
