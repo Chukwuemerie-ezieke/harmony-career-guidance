@@ -1,6 +1,6 @@
-# Career Guidance Platform
+# PathVerge
 
-A career guidance tool by **Harmony Digital Consults Ltd** for Nigerian secondary school students. Helps students discover university courses, JAMB subject combinations, and career paths based on their academic strengths and interests.
+PathVerge is a career guidance tool by **Harmony Digital Consults Ltd** for Nigerian secondary school students. It helps students discover university courses, JAMB subject combinations, and career paths based on their academic strengths and interests.
 
 ## Features
 
