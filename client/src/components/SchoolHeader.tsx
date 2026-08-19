@@ -10,7 +10,7 @@ export function SchoolHeader() {
           </div>
           <div className="min-w-0">
             <h1 className="text-base font-bold leading-tight truncate" data-testid="text-school-name">
-              Career Guidance Platform
+              PathVerge
             </h1>
             <p className="text-xs opacity-90 font-medium hidden sm:block">
               by Harmony Digital Consults Ltd
