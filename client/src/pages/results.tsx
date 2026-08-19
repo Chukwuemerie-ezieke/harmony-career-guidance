@@ -48,7 +48,7 @@ export default function Results() {
     if (!submission) return;
     const recs: RecommendationResult[] = JSON.parse(submission.recommendations);
     const courseNames = recs.map(r => r.name).join(", ");
-    const text = `I just discovered my ideal career path! My top recommended courses are: ${courseNames}. Try the Career Guidance Platform too!`;
+    const text = `I just discovered my ideal career path! My top recommended courses are: ${courseNames}. Try PathVerge too!`;
     const shareUrl = window.location.href;
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text + "\n" + shareUrl)}`;
     const a = document.createElement("a");
@@ -138,7 +138,7 @@ export default function Results() {
 
       {/* Print header (hidden on screen) */}
       <div className="hidden print:block text-center py-6 border-b">
-        <h1 className="text-xl font-bold">Career Guidance Report</h1>
+        <h1 className="text-xl font-bold">PathVerge Career Report</h1>
         <h2 className="text-lg">Harmony Digital Consults Ltd</h2>
         <p className="text-sm mt-1">Student: {submission.firstName} | Class: {submission.studentClass} | School: {(submission as any).schoolName || "N/A"} | Date: {new Date(submission.createdAt).toLocaleDateString()}</p>
       </div>
@@ -343,7 +343,7 @@ export default function Results() {
       {/* Print footer */}
       <div className="hidden print:block text-center py-4 border-t text-xs">
         <p>Powered by Harmony Digital Consults</p>
-        <p className="mt-0.5">Career Guidance Platform — Harmony Digital Consults Ltd</p>
+        <p className="mt-0.5">PathVerge — Harmony Digital Consults Ltd</p>
       </div>
 
       <footer className="text-center py-4 text-xs text-muted-foreground border-t border-border/50 print:hidden space-y-1">
