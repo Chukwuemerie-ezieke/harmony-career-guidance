@@ -207,12 +207,24 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-2">
+                <div className="hidden sm:flex justify-end pt-2">
                   <Button
                     onClick={() => setStep(2)}
                     disabled={!canProceedStep1}
                     className="gap-2"
                     data-testid="button-next-step-1"
+                  >
+                    Next <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+                
+                {/* Mobile Sticky Action Bar */}
+                <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 flex justify-end">
+                  <Button
+                    onClick={() => setStep(2)}
+                    disabled={!canProceedStep1}
+                    className="gap-2 w-full"
+                    data-testid="button-mobile-next-step-1"
                   >
                     Next <ArrowRight className="w-4 h-4" />
                   </Button>
@@ -253,7 +265,7 @@ export default function Home() {
                   })}
                 </div>
 
-                <div className="flex justify-between pt-2">
+                <div className="hidden sm:flex justify-between pt-2">
                   <Button variant="outline" onClick={() => setStep(1)} className="gap-2" data-testid="button-back-step-2">
                     <ArrowLeft className="w-4 h-4" /> Back
                   </Button>
@@ -262,6 +274,21 @@ export default function Home() {
                     disabled={!canProceedStep2}
                     className="gap-2"
                     data-testid="button-next-step-2"
+                  >
+                    Next <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Mobile Sticky Action Bar */}
+                <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 flex justify-between gap-3">
+                  <Button variant="outline" onClick={() => setStep(1)} className="gap-2 flex-1" data-testid="button-mobile-back-step-2">
+                    <ArrowLeft className="w-4 h-4" /> Back
+                  </Button>
+                  <Button
+                    onClick={() => setStep(3)}
+                    disabled={!canProceedStep2}
+                    className="gap-2 flex-1"
+                    data-testid="button-mobile-next-step-2"
                   >
                     Next <ArrowRight className="w-4 h-4" />
                   </Button>
@@ -321,7 +348,7 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="flex justify-between pt-2">
+                <div className="hidden sm:flex justify-between pt-2">
                   <Button variant="outline" onClick={() => setStep(2)} className="gap-2" data-testid="button-back-step-3">
                     <ArrowLeft className="w-4 h-4" /> Back
                   </Button>
@@ -330,6 +357,28 @@ export default function Home() {
                     disabled={!canSubmit || isSubmitting}
                     className="gap-2 bg-primary hover:bg-primary/90"
                     data-testid="button-find-my-path"
+                  >
+                    {isSubmitting ? (
+                      <>Finding your path...</>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        Find My Path
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Mobile Sticky Action Bar */}
+                <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 flex justify-between gap-3">
+                  <Button variant="outline" onClick={() => setStep(2)} className="gap-2 px-3" data-testid="button-mobile-back-step-3">
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={!canSubmit || isSubmitting}
+                    className="gap-2 flex-1 bg-primary hover:bg-primary/90"
+                    data-testid="button-mobile-find-my-path"
                   >
                     {isSubmitting ? (
                       <>Finding your path...</>
