@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { COURSES, getCategories, type CourseData } from "@/lib/courseData";
 import {
   Search, BookOpen, GraduationCap, Building2, Briefcase,
@@ -19,10 +20,7 @@ function CourseCard({ course }: { course: CourseData }) {
 
   return (
     <Card className="overflow-hidden transition-all" data-testid={`card-course-${course.name.replace(/\s/g, "-").toLowerCase()}`}>
-      <CardHeader
-        className="pb-2 cursor-pointer hover:bg-accent/30 transition-colors"
-        onClick={() => setExpanded(!expanded)}
-      >
+      <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -31,14 +29,28 @@ function CourseCard({ course }: { course: CourseData }) {
             </div>
             <CardTitle className="text-base">{course.name}</CardTitle>
           </div>
-          <Button variant="ghost" size="sm" className="flex-shrink-0 mt-1" data-testid={`button-expand-${course.name.replace(/\s/g, "-").toLowerCase()}`}>
-            {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        </div>
+        <div className="mt-3">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+            aria-controls={`course-details-${course.name.replace(/\s/g, "-").toLowerCase()}`}
+            data-testid={`button-expand-${course.name.replace(/\s/g, "-").toLowerCase()}`}
+            className="w-full sm:w-auto"
+          >
+            {expanded ? "Hide details" : "View details"}
+            {expanded ? <ChevronUp className="w-4 h-4 ml-1.5" /> : <ChevronDown className="w-4 h-4 ml-1.5" />}
           </Button>
         </div>
       </CardHeader>
 
       {expanded && (
-        <CardContent className="pt-0 space-y-4">
+        <CardContent 
+          id={`course-details-${course.name.replace(/\s/g, "-").toLowerCase()}`} 
+          className="pt-0 space-y-4"
+        >
           <p className="text-sm text-muted-foreground">{course.description}</p>
 
           <Separator />
@@ -205,9 +217,16 @@ export default function Explore() {
         </div>
 
         {filtered.length === 0 && (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-accent/20 rounded-lg border border-dashed">
             <BookOpen className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
-            <p className="text-muted-foreground">No courses match your search</p>
+            <p className="text-foreground font-medium mb-1">No courses found</p>
+            <p className="text-sm text-muted-foreground mb-4">Try adjusting your filters or search terms.</p>
+            <Button 
+              variant="outline" 
+              onClick={() => { setSearch(""); setCategoryFilter("all"); }}
+            >
+              Clear filters
+            </Button>
           </div>
         )}
       </main>

@@ -150,9 +150,25 @@ export default function Results() {
         </p>
       </div>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 space-y-6" data-testid="results-page">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6 pb-24 sm:pb-6 space-y-6 print:py-0 print:space-y-4" data-testid="results-page">
+      {/* Print-only Header */}
+      <div className="hidden print:block mb-8 text-center border-b pb-4">
+        <h1 className="text-3xl font-bold text-primary mb-2">Career Guidance Report</h1>
+        <p className="text-lg text-foreground mb-4">PathVerge — Career clarity for every student.</p>
+        <div className="flex justify-between text-sm text-muted-foreground mt-6 text-left">
+          <div>
+            <p><strong>Student:</strong> {submission.firstName}</p>
+            <p><strong>Class:</strong> {submission.studentClass}</p>
+          </div>
+          <div className="text-right">
+            <p><strong>Date:</strong> {new Date(submission.createdAt).toLocaleDateString()}</p>
+            <p><strong>School:</strong> {(submission as any).schoolName || "N/A"}</p>
+          </div>
+        </div>
+      </div>
+
         {/* Student summary */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 print:hidden">
           <div>
             <h2 className="text-xl font-bold text-foreground" data-testid="text-result-title">
               {submission.firstName}'s Career Path
@@ -191,7 +207,12 @@ export default function Results() {
                     <Badge variant="outline" className="text-xs font-normal">{rec.category}</Badge>
                     <Badge variant="secondary" className="text-xs">{rec.yearsOfStudy}</Badge>
                   </div>
-                  <CardTitle className="text-lg mt-1.5">{rec.name}</CardTitle>
+                  <CardTitle className="text-lg mt-1.5">
+                    <span className="hidden print:inline-block text-primary font-bold mr-2">
+                      {index === 0 ? "Top Match:" : "Alternative Match:"}
+                    </span>
+                    {rec.name}
+                  </CardTitle>
                   <p className="text-sm text-muted-foreground mt-1">{rec.description}</p>
                 </div>
               </div>
@@ -207,8 +228,8 @@ export default function Results() {
                 <p className="text-sm text-foreground/80 leading-relaxed">{rec.whyText}</p>
               </div>
 
+              <div className="print:hidden">
               <Separator />
-
               {/* JAMB subjects */}
               <div>
                 <h4 className="text-sm font-semibold flex items-center gap-2 mb-2">
@@ -321,12 +342,24 @@ export default function Results() {
                 <Clock className="w-4 h-4" />
                 <span>Estimated duration: {rec.yearsOfStudy}</span>
               </div>
+              </div>
             </CardContent>
           </Card>
         ))}
 
+        
+      {/* Print-only Next Steps */}
+      <div className="hidden print:block mt-8 pt-6 border-t page-break-inside-avoid">
+        <h3 className="text-xl font-bold text-foreground mb-3">Next Steps & Reflection</h3>
+        <ul className="list-disc pl-5 space-y-2 text-foreground/80">
+          <li>Review these recommendations with your parents, guardians, and school counsellor.</li>
+          <li>Research the specific entry requirements for the universities you are interested in.</li>
+          <li>Remember that these results are a guide for reflection and career conversations, not a guaranteed outcome.</li>
+        </ul>
+      </div>
+
         {/* Action buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 print:hidden">
+        <div className="hidden sm:flex flex-col sm:flex-row gap-3 print:hidden">
           <Link href="/">
             <Button variant="outline" className="gap-2 w-full sm:w-auto" data-testid="link-start-over">
               <ArrowLeft className="w-4 h-4" /> Take Test Again
@@ -335,6 +368,18 @@ export default function Results() {
           <Link href="/explore">
             <Button variant="outline" className="gap-2 w-full sm:w-auto" data-testid="link-explore-courses">
               <BookOpen className="w-4 h-4" /> Explore All Courses
+            </Button>
+          </Link>
+        </div>
+        
+        {/* Mobile Sticky Action Bar */}
+        <div className="sm:hidden fixed bottom-0 left-0 right-0 p-4 bg-background border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-50 flex justify-between gap-3 print:hidden">
+          <Button variant="outline" onClick={handlePrint} className="gap-1.5 flex-1" data-testid="button-mobile-print">
+            <Printer className="w-4 h-4" /> Print PDF
+          </Button>
+          <Link href="/explore" className="flex-1 flex">
+            <Button variant="default" className="gap-1.5 w-full" data-testid="link-mobile-explore-courses">
+              <BookOpen className="w-4 h-4" /> Explore
             </Button>
           </Link>
         </div>
