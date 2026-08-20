@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import crypto from "crypto";
 
-let handler: ((req: VercelRequest, res: VercelResponse) => Promise<void>) | null = null;
+let handler: ((req: VercelRequest, res: VercelResponse) => Promise<VercelResponse | void>) | null = null;
 
 // Simple token generation from password
 function makeToken(password: string): string {
@@ -170,7 +170,7 @@ export default async function main(req: VercelRequest, res: VercelResponse) {
     if (!handler) {
       handler = await createHandler();
     }
-    await handler(req, res);
+    await handler!(req, res);
   } catch (error: any) {
     console.error("API Error:", error);
     return res.status(500).json({ error: error.message });
