@@ -10,12 +10,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Submission } from "@shared/schema";
 import {
-  Users, Search, ArrowLeft, BarChart3, TrendingUp,
+  Users, Search, ArrowLeft, ArrowRight, BarChart3, TrendingUp,
   Filter, Eye, Compass, Trash2, Lock, LogOut, Download, X
 } from "lucide-react";
 import {
@@ -131,6 +133,7 @@ export default function Dashboard() {
   const [schoolCodeInput, setSchoolCodeInput] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [showCharts, setShowCharts] = useState(false);
   const { toast } = useToast();
 
@@ -493,7 +496,7 @@ export default function Dashboard() {
                 {/* Course Distribution Pie */}
                 <Card>
                   <CardContent className="p-4">
-                    <h3 className="text-sm font-semibold mb-3">Course Distribution</h3>
+                    <div className="flex justify-between items-center mb-3"><h3 className="text-sm font-semibold">Aggregate Course Categories</h3><Badge variant="outline" className="text-[10px]">Privacy Protected</Badge></div><p className="text-xs text-muted-foreground mb-4">Groups with fewer than 5 students are masked.</p>
                     <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
                         <Pie
@@ -645,11 +648,27 @@ export default function Dashboard() {
                               {new Date(s.createdAt).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
-                              <Link href={`/results/${s.id}`}>
-                                <Button variant="ghost" size="sm" className="gap-1" data-testid={`link-view-${s.id}`}>
-                                  <Eye className="w-3.5 h-3.5" />
+                              <div className="flex items-center gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  onClick={() => setSelectedStudentId(s.id)} 
+                                  title="Quick view"
+                                  data-testid={`button-quick-view-${s.id}`}
+                                >
+                                  <Eye className="w-4 h-4 text-muted-foreground" />
                                 </Button>
-                              </Link>
+                                <Link href={`/results/${s.id}`}>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    title="Open full results"
+                                    data-testid={`link-full-results-${s.id}`}
+                                  >
+                                    <ArrowRight className="w-4 h-4 text-primary" />
+                                  </Button>
+                                </Link>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -695,6 +714,70 @@ export default function Dashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Student Detail Drawer */}
+      <Sheet open={selectedStudentId !== null} onOpenChange={(open) => !open && setSelectedStudentId(null)}>
+        <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+          {(() => {
+            const student = filtered.find(s => s.id === selectedStudentId);
+            if (!student) return null;
+            return (
+              <>
+                <SheetHeader className="mb-6">
+                  <SheetTitle>{student.firstName}'s Details</SheetTitle>
+                  <SheetDescription>
+                    Submitted on {new Date(student.createdAt).toLocaleDateString()}
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="space-y-6">
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2 text-primary">Student Profile</h4>
+                    <div className="grid grid-cols-2 gap-y-2 text-sm">
+                      <div className="text-muted-foreground">Class</div>
+                      <div className="font-medium">{student.studentClass}</div>
+                      <div className="text-muted-foreground">School</div>
+                      <div className="font-medium">{(student as any).schoolName || "-"}</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2 text-primary">Subjects</h4>
+                    <div className="flex flex-wrap gap-1.5">
+                      {student.subjects.map((sub: string) => (
+                        <Badge key={sub} variant="outline" className="text-xs">{sub}</Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-semibold mb-2 text-primary">Recommended Courses</h4>
+                    <div className="space-y-3">
+                      {student.parsedRecs.map((rec: any, idx: number) => (
+                        <div key={rec.name} className="border rounded-md p-3 text-sm bg-accent/10">
+                          <div className="flex items-start justify-between mb-1">
+                            <span className="font-semibold">{idx === 0 ? "🏆 Top Match:" : "✨ Alternative:"} {rec.name}</span>
+                          </div>
+                          <p className="text-muted-foreground text-xs">{rec.category}</p>
+                          <p className="mt-2 text-foreground/80 line-clamp-3">{rec.whyText}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t">
+                    <Link href={`/results/${student.id}`}>
+                      <Button className="w-full gap-2" data-testid="button-drawer-full-results">
+                        Open Full Results <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </SheetContent>
+      </Sheet>
+
     </div>
   );
 }

@@ -53,3 +53,34 @@ export function getSubmissions(): LocalSubmission[] {
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
+
+
+export interface SavedPathway {
+  name: string;
+  category: string;
+  savedAt: string;
+}
+
+export function getSavedPathways(): SavedPathway[] {
+  try {
+    const data = localStorage.getItem("pathverge_saved");
+    return data ? JSON.parse(data) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function savePathway(pathway: Omit<SavedPathway, "savedAt">) {
+  const current = getSavedPathways();
+  if (current.some(p => p.name === pathway.name)) return current;
+  const updated = [...current, { ...pathway, savedAt: new Date().toISOString() }];
+  localStorage.setItem("pathverge_saved", JSON.stringify(updated));
+  return updated;
+}
+
+export function removePathway(name: string) {
+  const current = getSavedPathways();
+  const updated = current.filter(p => p.name !== name);
+  localStorage.setItem("pathverge_saved", JSON.stringify(updated));
+  return updated;
+}
