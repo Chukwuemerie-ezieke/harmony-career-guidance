@@ -496,7 +496,7 @@ export default function Dashboard() {
                 {/* Course Distribution Pie */}
                 <Card>
                   <CardContent className="p-4">
-                    <h3 className="text-sm font-semibold mb-3">Course Distribution</h3>
+                    <div className="flex justify-between items-center mb-3"><h3 className="text-sm font-semibold">Aggregate Course Categories</h3><Badge variant="outline" className="text-[10px]">Privacy Protected</Badge></div><p className="text-xs text-muted-foreground mb-4">Groups with fewer than 5 students are masked.</p>
                     <ResponsiveContainer width="100%" height={220}>
                       <PieChart>
                         <Pie
