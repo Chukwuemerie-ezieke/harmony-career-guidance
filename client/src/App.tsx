@@ -8,6 +8,7 @@ import { Analytics } from "@vercel/analytics/react";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Results from "@/pages/results";
+import Eligibility from "@/pages/eligibility";
 import Explore from "@/pages/explore";
 import Dashboard from "@/pages/dashboard";
 
@@ -16,6 +17,7 @@ function AppRouter() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/results/:id" component={Results} />
+      <Route path="/eligibility" component={Eligibility} />
       <Route path="/explore" component={Explore} />
       <Route path="/dashboard" component={Dashboard} />
       <Route component={NotFound} />

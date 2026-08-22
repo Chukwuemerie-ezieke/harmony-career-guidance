@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
 import { Link } from "wouter";
+import { useState, useMemo } from "react";
+
 import { SchoolHeader } from "@/components/SchoolHeader";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,7 +34,8 @@ import {
   type CoursePathway,
   type UniversityOption,
 } from "@/lib/courseCatalogue";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, ClipboardCheck } from "lucide-react";
+
 import {
   Search,
   BookOpen,
