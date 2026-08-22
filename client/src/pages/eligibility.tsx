@@ -12,7 +12,8 @@ import { getLocalSubjectData, saveLocalSubjectData, clearLocalSubjectData, type 
 import { getAdmissionRequirement, type AdmissionRequirement } from "@/lib/admissionRequirements";
 import { evaluateReadiness, type ReadinessResult } from "@/lib/readinessEvaluator";
 import { COURSE_CATALOGUE } from "@/lib/courseCatalogue";
-import { BookOpen, GraduationCap, AlertCircle, CheckCircle2, ArrowLeft, Trash2, Info } from "lucide-react";
+import { BookOpen, GraduationCap, AlertCircle, CheckCircle2, ArrowLeft, Trash2, Info, Map } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Eligibility() {
   const [, setLocation] = useLocation();
@@ -285,6 +286,14 @@ export default function Eligibility() {
 
                     <div className="p-3 bg-primary/5 border border-primary/10 rounded-md text-xs text-foreground/80">
                       <strong>Notice:</strong> Requirements vary by institution and admission cycle. Check the current JAMB IBASS/Brochure and the university's official admissions page before applying. This evaluation checks against general guidance only and is not a guarantee of admission.
+                    </div>
+                    
+                    <div className="pt-2">
+                       <Link href={`/journey?pathwayId=${pathwayId}`}>
+                          <Button className="w-full gap-2" variant="outline">
+                             <Map className="w-4 h-4" /> Plan your admission journey
+                          </Button>
+                       </Link>
                     </div>
                   </div>
                 )}
