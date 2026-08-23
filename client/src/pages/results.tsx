@@ -589,6 +589,11 @@ export default function Results() {
               <BookOpen className="w-4 h-4" /> Explore All Courses
             </Button>
           </Link>
+          <Link href="/alternatives">
+            <Button variant="outline" className="gap-2 w-full sm:w-auto" data-testid="link-explore-alternatives">
+              <Compass className="w-4 h-4" /> Explore Alternative Routes
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile Sticky Action Bar */}
@@ -609,6 +614,11 @@ export default function Results() {
           >
             <Share2 className="w-4 h-4" /> Share
           </Button>
+          <Link href="/alternatives" className="hidden sm:flex">
+            <Button variant="outline" className="gap-1.5 w-full" data-testid="link-mobile-explore-alternatives">
+              <Compass className="w-4 h-4" /> Alts
+            </Button>
+          </Link>
           <Link href="/explore" className="flex-1 flex">
             <Button
               variant="default"
@@ -616,6 +626,11 @@ export default function Results() {
               data-testid="link-mobile-explore-courses"
             >
               <BookOpen className="w-4 h-4" /> Explore
+            </Button>
+          </Link>
+          <Link href="/alternatives">
+            <Button variant="outline" className="gap-2 w-full sm:w-auto" data-testid="link-explore-alternatives">
+              <Compass className="w-4 h-4" /> Explore Alternative Routes
             </Button>
           </Link>
         </div>

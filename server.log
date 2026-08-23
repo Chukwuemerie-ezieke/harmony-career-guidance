@@ -1,0 +1,9 @@
+
+> rest-express@1.0.0 dev
+> NODE_ENV=development tsx server/index.ts
+
+12:51:29 PM [express] serving on port 5000
+
+A PostCSS plugin did not pass the `from` option to `postcss.parse`. This may cause imported assets to be incorrectly transformed. If you've recently added a PostCSS plugin that raised this warning, please contact the package author to fix the issue.
+12:51:52 PM [vite] (client) ✨ new dependencies optimized: @radix-ui/react-progress, @radix-ui/react-accordion
+12:51:52 PM [vite] (client) ✨ optimized dependencies changed. reloading

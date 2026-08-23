@@ -12,7 +12,7 @@ import { getLocalSubjectData, saveLocalSubjectData, clearLocalSubjectData, type 
 import { getAdmissionRequirement, type AdmissionRequirement } from "@/lib/admissionRequirements";
 import { evaluateReadiness, type ReadinessResult } from "@/lib/readinessEvaluator";
 import { COURSE_CATALOGUE } from "@/lib/courseCatalogue";
-import { BookOpen, GraduationCap, AlertCircle, CheckCircle2, ArrowLeft, Trash2, Info, Map } from "lucide-react";
+import { BookOpen, GraduationCap, AlertCircle, CheckCircle2, ArrowLeft, Trash2, Info, Map, Compass } from "lucide-react";
 import { Link } from "wouter";
 
 export default function Eligibility() {
@@ -292,6 +292,11 @@ export default function Eligibility() {
                        <Link href={`/journey?pathwayId=${pathwayId}`}>
                           <Button className="w-full gap-2" variant="outline">
                              <Map className="w-4 h-4" /> Plan your admission journey
+                          </Button>
+                       </Link>
+                       <Link href="/alternatives">
+                          <Button className="w-full gap-2 mt-2" variant="outline">
+                             <Compass className="w-4 h-4" /> Explore alternative pathways
                           </Button>
                        </Link>
                     </div>
