@@ -18,7 +18,8 @@ import {
 import { COURSE_CATALOGUE } from "@/lib/courseCatalogue";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { ChevronDown, ChevronUp, Map, AlertCircle, Info, Trash2, ArrowLeft, ExternalLink, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Map, AlertCircle, Info, Trash2, ArrowLeft, ExternalLink, CheckCircle2, Compass } from "lucide-react";
+import { Link } from "wouter";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 
 export default function JourneyPlanner() {
@@ -204,7 +205,12 @@ export default function JourneyPlanner() {
             </Accordion>
         </div>
 
-        <div className="pt-8 border-t flex justify-end">
+        <div className="pt-8 border-t flex flex-col sm:flex-row justify-between items-center gap-4">
+            <Link href="/alternatives">
+               <Button variant="outline" className="gap-2">
+                 <Compass className="w-4 h-4" /> Consider alternative routes
+               </Button>
+            </Link>
             <Button variant="ghost" onClick={handleClear} className="text-destructive">
                 <Trash2 className="w-4 h-4 mr-2" /> Reset journey progress
             </Button>

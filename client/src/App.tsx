@@ -10,6 +10,7 @@ import Home from "@/pages/home";
 import Results from "@/pages/results";
 import Eligibility from "@/pages/eligibility";
 import JourneyPlanner from "@/pages/journey";
+import Alternatives from "@/pages/alternatives";
 import Explore from "@/pages/explore";
 import Dashboard from "@/pages/dashboard";
 
@@ -20,6 +21,7 @@ function AppRouter() {
       <Route path="/results/:id" component={Results} />
       <Route path="/eligibility" component={Eligibility} />
       <Route path="/journey" component={JourneyPlanner} />
+      <Route path="/alternatives" component={Alternatives} />
       <Route path="/explore" component={Explore} />
       <Route path="/dashboard" component={Dashboard} />
       <Route component={NotFound} />
