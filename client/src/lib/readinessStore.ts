@@ -9,9 +9,16 @@ const READINESS_KEY = "pathverge_readiness_data";
 
 export function getLocalSubjectData(): LocalSubjectData {
   try {
-    const data = localStorage.getItem(READINESS_KEY);
+    const data = localStorage.getItem("pathverge_readiness_data");
     if (data) {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          utmeSubjects: Array.isArray(parsed.utmeSubjects) ? parsed.utmeSubjects : [],
+          oLevelSubjects: Array.isArray(parsed.oLevelSubjects) ? parsed.oLevelSubjects : [],
+          creditCount: typeof parsed.creditCount === 'number' ? parsed.creditCount : undefined
+        };
+      }
     }
   } catch (e) {
     console.error("Error reading readiness data", e);
