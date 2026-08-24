@@ -1,10 +1,14 @@
-import { Compass, Menu } from "lucide-react";
+import { Compass, Menu, BookOpen, Map, WifiOff } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useLowDataMode } from "@/hooks/use-low-data";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 export function SchoolHeader() {
+  const { isLowData, setIsLowData } = useLowDataMode();
   const [location] = useLocation();
 
   const handleStartAssessment = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>) => {

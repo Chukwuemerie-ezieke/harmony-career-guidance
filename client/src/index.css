@@ -204,3 +204,24 @@
     inset: -1px;
   }
 }
+
+/* Low Data Mode CSS Adjustments */
+body.low-data-mode * {
+  animation: none !important;
+  transition: none !important;
+}
+
+body.low-data-mode .bg-hero-pattern,
+body.low-data-mode .bg-dots-pattern {
+  background-image: none !important;
+  background-color: hsl(var(--background)) !important;
+}
+
+/* Specific low-data-mode overrides to simplify visual design where possible without breaking layout */
+body.low-data-mode .shadow-lg,
+body.low-data-mode .shadow-sm,
+body.low-data-mode .shadow {
+  box-shadow: none !important;
+  border-width: 1px !important;
+}
+
