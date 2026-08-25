@@ -63,9 +63,15 @@ export interface SavedPathway {
 
 export function getSavedPathways(): SavedPathway[] {
   try {
-    const data = localStorage.getItem("pathverge_saved");
-    return data ? JSON.parse(data) : [];
-  } catch {
+    const data = localStorage.getItem("pathverge_saved_paths");
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    if (Array.isArray(parsed)) {
+      return parsed.filter(item => item && typeof item === 'object' && item.courseName);
+    }
+    return [];
+  } catch (e) {
+    console.error("Failed to parse saved pathways", e);
     return [];
   }
 }

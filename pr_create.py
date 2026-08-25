@@ -2,29 +2,30 @@ import subprocess
 import json
 import os
 
-title = "feat: add PathVerge PWA and low-data experience"
+title = "chore: strengthen PathVerge release readiness and resilience"
 body = """## Summary
-- Configured a standards-compliant Progressive Web App using `vite-plugin-pwa` with custom caching.
-- Enabled standalone installation, manifesting with PathVerge colors and icons.
-- Implemented `PWAStatus.tsx` to handle online/offline detection (with an accessible `aria-live` region and visual banner) and dismissible installation prompts.
-- Introduced a Low-Data Mode toggle (persisted in `localStorage`) that disables animations, backgrounds, and shadows.
-- Added `PWA_LOW_DATA.md` to document caching behavior, exclusions, and testing procedures.
+- Created `RELEASE_READINESS.md` detailing the audit scope, test procedures, and known limitations.
+- Improved `client/src/pages/not-found.tsx` to provide clear recovery actions (Home / Explore).
+- Hardened all local storage access functions (`localStore.ts`, `readinessStore.ts`, `journeyStore.ts`) with try/catch wrappers and safe fallback defaults to prevent application crashes from malformed, missing, or outdated local data.
+- Enforced `rel="noopener noreferrer"` on external links for security and accessibility.
+- Verified that empty states across explore, alternatives, and eligibility pages are robust and user-friendly.
+- PWA caches, authentication logic, scoring logic, and other private states are unaltered and protected.
 
-## Cache Strategy & Data Integrity
-- Precached app shell, static assets, and local data layers (Catalogue, Eligibility, Journey, Alternatives).
-- Guaranteed that all `/api/*`, `/dashboard`, and `/shared/*` routes are `NetworkOnly` to protect user data and dynamic server logic.
-- Offline viewing displays a clear banner reminding users that content may be stale and should be verified online.
+## Data integrity
+- Assessment questions, scoring mechanisms, and recommendation ranking logic are strictly preserved.
+- No new tracking or third-party dependencies were introduced.
+- Existing shared link functionality and user inputs saved locally are treated safely, with no aggressive wiping of unrelated data.
 
 ## Validation
-- `npm run check` and `npm run build` executed successfully.
-- Service worker and manifest correctly generated.
-- Testing confirmed offline fallback and low-data modes work without breaking application state or accessibility.
+- `npm run check` passes.
+- `npm run build` completes successfully.
+- Manual testing covered offline resilience, low-data mode interactions, and recovery from deleted/corrupted local storage values.
 """
 
 data = {
     "title": title,
     "body": body,
-    "head": "feat/pathverge-pwa-low-data",
+    "head": "chore/pathverge-release-readiness",
     "base": "master"
 }
 
